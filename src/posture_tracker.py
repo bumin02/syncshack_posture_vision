@@ -25,15 +25,15 @@ def findMidpoint(a_x, a_y, b_x, b_y):
     return (int((a_x + b_x) / 2.0), int((a_y + b_y) / 2.0))
 
 def check_shoulder2shoulder(s1_x, s1_y, s2_x, s2_y, benchmark_dist, max_pct):
+    print("do i even go here")
     curr_dist = findDistance(s1_x, s1_y, s2_x, s2_y)
-    if (math.abs(curr_dist - benchmark_dist)) / benchmark_dist > max_pct:
-        return True # True means bad posture
-    else:
-        return False
+    print("current dist", curr_dist - benchmark_dist)
+    print("MATHS CHECK", abs(curr_dist - benchmark_dist) / benchmark_dist > (max_pct/100))
+    return ((abs(curr_dist - benchmark_dist)) / benchmark_dist) > (max_pct/100)
 
 def check_head2neckbase(a_x,a_y, b_x, b_y, benchmark_dist, max_pct):
   curr_dist = findDistance(a_x,a_y, b_x, b_y)
-  return math.abs(curr_dist - benchmark_dist) / benchmark_dist > max_pct
+  return abs(curr_dist - benchmark_dist) / benchmark_dist > max_pct/100.0
 
 def check_headtilt(shoulder1_x, shoulder1_y, shoulder2_x, shoulder2_y, head_x, head_y, max_degree):
     m_x, m_y = findMidpoint(shoulder1_x, shoulder1_y, shoulder2_x, shoulder2_y)
@@ -47,9 +47,10 @@ def check_headtilt(shoulder1_x, shoulder1_y, shoulder2_x, shoulder2_y, head_x, h
     # find degree angle between v1 and v2.
     # dotproduct(v1,v2) / magnitude(v1) * magnitude(v2)
     dot_product = ( (v1_x)*(v2_x) + (v1_y)*(v2_y) )
-    theta = math.acos( dot_product / (math.sqrt((v1_y - v1_x)**2 + (v2_y - v2_x)**2) * v2_x ) )
+    print("DOT PRODUCT", dot_product)
+    theta = math.acos( dot_product / (math.sqrt((v1_y - v1_x)**2) * math.sqrt((v2_y - v2_x)**2) ) ) # math domain error
     degree = int(180/math.pi)*theta
-    return math.abs(degree - 90) > max_degree
+    return abs(degree - 90) > max_degree
 
   
 def benchmark_photo(image):
@@ -151,6 +152,11 @@ def main():
     height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
     frame_size = (width, height)
 
+    total_timer = time.time()
+    slouch_timer = 0.0
+    is_tracking = False
+    total_slouch = 0
+
     while cap.isOpened():
         # Capture frames.
         success, image = cap.read()
@@ -221,37 +227,42 @@ def main():
             with open('.benchmark') as b:
     
                 benchmark = b.readlines()
-                shoulder2shoulder = benchmark[0]
-                chest2nose = benchmark[1]
+                shoulder2shoulder = int(benchmark[0])
+                chest2nose = int(benchmark[1])
              
             # read settings file to understand posture flexibility (seemlessness when user adjusts settings during recording)
             with open('.settings') as s:
                 user_settings = s.readlines()
-                s2s_slouch_perc = user_settings[0]
-                n2c_slouch_perc = user_settings[1] # clearer definition
-                ht_perc = user_settings[2] # change to percentage
-                max_slouch_time = user_settings[3]
-
-            print("AHH", s2s_slouch_perc)
+                s2s_slouch_perc = int(user_settings[0])
+                n2c_slouch_perc = int(user_settings[1]) # clearer definition
+                ht_perc = int(user_settings[2]) # change to percentage
+                max_slouch_time = int(user_settings[3])
 
             # obtain current posture status of posture and determine if bad posture (using a boolean array)
 
             shoulder_midpoint = findMidpoint(l_shldr_x, l_shldr_y, r_shldr_x, r_shldr_y)
 
+            print("HWHHWH")
+
             s2s_slouch = check_shoulder2shoulder(l_shldr_x, l_shldr_y, r_shldr_x, r_shldr_y, shoulder2shoulder, s2s_slouch_perc)
+            print("WBWBWBWWN")
             n2c_slouch = check_head2neckbase(shoulder_midpoint[0], shoulder_midpoint[1], nose_x, nose_y, chest2nose, n2c_slouch_perc)
             ht_verify = check_headtilt(l_shldr_x, l_shldr_y, r_shldr_x, r_shldr_y, nose_x, nose_y, ht_perc)
 
             bad_posture_verification = [s2s_slouch, n2c_slouch, ht_verify] # if any of these are true, user is in a bad posture
             # double check the maths for this ^
 
-            for factor in bad_posture_verification:
-                if factor:
-                    # start counting timer
-                    bad_posture_timer_start = time.time()
-                    
-                
+            print("TIMEER DEBUGGER")
 
+            if s2s_slouch or n2c_slouch or ht_verify:
+                is_tracking = True
+                slouch_timer = time.time()
+            
+            if is_tracking == False and slouch_timer > 0:
+                total_slouch += time.time() - slouch_timer
+
+            print("SLOUCH TIME", total_slouch)
+                    
             # shoulder_distance = findDistance(l_shldr_x, l_shldr_y, r_shldr_x, r_shldr_y)
             # shoulder_midpoint = findMidpoint(l_shldr_x, l_shldr_y, r_shldr_x, r_shldr_y)
             # nose_to_chest = findDistance(shoulder_midpoint[0], shoulder_midpoint[1], nose_x, nose_y)
