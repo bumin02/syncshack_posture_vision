@@ -68,8 +68,15 @@ def main():
             # Left ear.
             l_ear_x = int(lm.landmark[lmPose.LEFT_EAR].x * w)
             l_ear_y = int(lm.landmark[lmPose.LEFT_EAR].y * h)
-            print(l_shldr_x, l_shldr_y)
-            print(r_shldr_x, r_shldr_y)
+            # Right ear.
+            l_ear_x = int(lm.landmark[lmPose.RIGHT_EAR].x * w)
+            l_ear_y = int(lm.landmark[lmPose.RIGHT_EAR].y * h)
+
+            print("L SHOULDER", l_shldr_x, l_shldr_y)
+            print("R SHOULDER", r_shldr_x, r_shldr_y)
+            print("L EAR", l_ear_x, l_ear_y)
+            print("L EAR", l_ear_x, l_ear_y)
+
             # Calculate distance between left shoulder and right shoulder points.
             shoulder_distance = findDistance(l_shldr_x, l_shldr_y, r_shldr_x, r_shldr_y)
             # Assist to align the camera to point at the side view of the person.
