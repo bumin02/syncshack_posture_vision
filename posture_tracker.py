@@ -14,8 +14,12 @@ pose = mp_pose.Pose()
 def sendWarning(x):
     pass
 
-def comeBackWarning():
-    pass
+# finds the distance between 2 coordinates, a and b
+def findDistance(a_x, a_y, b_x, b_y):
+    return math.sqrt((a_x - b_x) ** 2 + (a_y - b_y) ** 2)
+
+def findMidpoint(a_x, a_y, b_x, b_y):
+  return ((a_x + b_x) / 2.0, (a_y + b_y) / 2.0)
 
 # finds the distance between 2 coordinates, a and b
 def findDistance(a_x, a_y, b_x, b_y):
@@ -72,10 +76,15 @@ def main():
             l_ear_x = int(lm.landmark[lmPose.RIGHT_EAR].x * w)
             l_ear_y = int(lm.landmark[lmPose.RIGHT_EAR].y * h)
 
+            nose_x = int(lm.landmark[lmPose.NOSE].x * w)
+            nose_y = int(lm.landmark[lmPose.NOSE].y * w)
+
             print("L SHOULDER", l_shldr_x, l_shldr_y)
             print("R SHOULDER", r_shldr_x, r_shldr_y)
             print("L EAR", l_ear_x, l_ear_y)
             print("L EAR", l_ear_x, l_ear_y)
+
+            shoulder_midpoint = findMidpoint(l_shldr_x, l_shldr_y, r_shldr_x, r_shldr_y)
 
             # Calculate distance between left shoulder and right shoulder points.
             shoulder_distance = findDistance(l_shldr_x, l_shldr_y, r_shldr_x, r_shldr_y)
@@ -113,7 +122,7 @@ def main():
             # if bad_time > 15:
             #     sendWarning()
         except AttributeError as ae:
-            comeBackWarning()
+            pass
 
 
 
