@@ -1,6 +1,7 @@
 import streamlit as st
 import cv2
 import numpy as np
+from posture_tracker import benchmark_photo
 
 st.title("Posture settings")
 
@@ -12,5 +13,5 @@ img_file_buffer = st.camera_input("Set benchmark posture", help=help_msg)
 if img_file_buffer:
     bytes_data = img_file_buffer.getvalue()
     cv2_img = cv2.imdecode(np.frombuffer(bytes_data, np.uint8), cv2.IMREAD_COLOR)
-    cv2_img = cv2.cvtColor(cv2_img, cv2.COLOR_RGB2BGR)
+    cv2_img = benchmark_photo(cv2_img)
     st.image(cv2_img)
