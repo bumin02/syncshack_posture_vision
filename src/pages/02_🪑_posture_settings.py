@@ -3,9 +3,9 @@ import csv
 import os
 
 def saveChange():
-    global s2s, h2n, ht
+    global s2s, h2n, ht, slouch_max
     with open("./.settings", "w") as f:
-        f.write(f"{s2s}\n{h2n}\n{ht}")
+        f.write(f"{s2s}\n{h2n}\n{ht}\n{slouch_max}")
 
 def reset():
     os.system("cp ./.basesettings ./.settings")
@@ -15,6 +15,7 @@ with open("./.settings", "r") as f:
     s2s =  int(settings[0])
     h2n = int(settings[1])
     ht = int(settings[2])
+    slouch_max = int(settings[3])
 
 st.title("Posture settings")
 
@@ -24,7 +25,7 @@ h2n = st.slider("How much percentage change in distance from head to neck base s
 ht = st.slider("What is minimum amount of head tilt should be considered slouching: ", 0, 90,ht)
 
 st.subheader("Technical settings")
-tracking_interval = st.slider("How many seconds after you slouch should we alert you: ", 1, 120, 12)
+slouch_max = st.slider("How many seconds after you slouch should we alert you: ", 1, 120, slouch_max)
 
 
 st.button("Apply!", on_click=saveChange)

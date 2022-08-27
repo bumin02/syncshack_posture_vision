@@ -3,6 +3,7 @@ import mediapipe as mp
 import time
 import math
 import os
+import subprocess
 
 # Initialize mediapipe pose class.
 mp_pose = mp.solutions.pose
@@ -14,7 +15,7 @@ def get_photo_info():
 # METHODS
 # warns user when poor posture is detected over a certain time period.
 def sendWarning(title, message):
-	pass
+    os.system(f"bash ./alert.sh {message} {title}")
   
 # finds the distance between 2 coordinates, a and b
 def findDistance(a_x, a_y, b_x, b_y):
@@ -24,15 +25,15 @@ def findMidpoint(a_x, a_y, b_x, b_y):
     return (int((a_x + b_x) / 2.0), int((a_y + b_y) / 2.0))
 
 def check_shoulder2shoulder(s1_x, s1_y, s2_x, s2_y, benchmark_dist, max_pct):
+    print("do i even go here")
     curr_dist = findDistance(s1_x, s1_y, s2_x, s2_y)
-    if (math.abs(curr_dist - benchmark_dist)) / benchmark_dist > max_pct:
-        return True # True means bad posture
-    else:
-        return False
+    print("current dist", curr_dist - benchmark_dist)
+    print("MATHS CHECK", abs(curr_dist - benchmark_dist) / benchmark_dist > (max_pct/100))
+    return ((abs(curr_dist - benchmark_dist)) / benchmark_dist) > (max_pct/100)
 
 def check_head2neckbase(a_x,a_y, b_x, b_y, benchmark_dist, max_pct):
   curr_dist = findDistance(a_x,a_y, b_x, b_y)
-  return math.abs(curr_dist - benchmark_dist) / benchmark_dist > max_pct
+  return abs(curr_dist - benchmark_dist) / benchmark_dist > max_pct/100.0
 
 def check_headtilt(shoulder1_x, shoulder1_y, shoulder2_x, shoulder2_y, head_x, head_y, max_degree):
     m_x, m_y = findMidpoint(shoulder1_x, shoulder1_y, shoulder2_x, shoulder2_y)
@@ -46,25 +47,16 @@ def check_headtilt(shoulder1_x, shoulder1_y, shoulder2_x, shoulder2_y, head_x, h
     # find degree angle between v1 and v2.
     # dotproduct(v1,v2) / magnitude(v1) * magnitude(v2)
     dot_product = ( (v1_x)*(v2_x) + (v1_y)*(v2_y) )
-    theta = math.acos( dot_product / (math.sqrt((v1_y - v1_x)**2 + (v2_y - v2_x)**2) * v2_x ) )
+    print("DOT PRODUCT", dot_product)
+    theta = math.acos( dot_product / (math.sqrt((v1_y - v1_x)**2) * math.sqrt((v2_y - v2_x)**2) ) ) # math domain error
     degree = int(180/math.pi)*theta
-    return math.abs(degree - 90) > max_degree
+    return abs(degree - 90) > max_degree
 
   
 def benchmark_photo(image):
 
     # Get height and width.
     h, w = image.shape[:2]
-
-    # Convert the BGR image to RGB.
-    # image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-    # image = cv2.resize(image, None, interpolation=cv2.INTER_AREA)
-    
-    # image_output = cv2.ImageWriter("analysed_img.png", (h,w))  ### ?
-
-    ###
-    # frame = cv2.resize(frame, None, fx=0.5, fy=0.5, interpolation=cv2.INTER_AREA)
-    # cv2.imshow('Posture Tracker', image)
 
     # Convert the image back to BGR.
     image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
@@ -96,6 +88,8 @@ def benchmark_photo(image):
         nose_x = int(lm.landmark[lmPose.NOSE].x * w)
         nose_y = int(lm.landmark[lmPose.NOSE].y * h)
 
+        print("*** from benchmark_photo ***")
+
         print("L SHOULDER", l_shldr_x, l_shldr_y)
         print("R SHOULDER", r_shldr_x, r_shldr_y)
         print("L EAR", l_ear_x, l_ear_y)
@@ -104,16 +98,24 @@ def benchmark_photo(image):
         print("X NOSE", nose_x)
         print("Y NOSE", nose_y)
 
+        print("******")
+
         image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
 
         shoulder_midpoint = findMidpoint(l_shldr_x, l_shldr_y, r_shldr_x, r_shldr_y)
         shoulder_distance = findDistance(l_shldr_x, l_shldr_y, r_shldr_x, r_shldr_y)
+        nose_to_midpoint = findDistance(shoulder_midpoint[0], shoulder_midpoint[1], nose_x, nose_y)
+
+        user_stats = [shoulder_distance, nose_to_midpoint]
+
+        with open(".benchmark", "w") as f:
+            f.write(f"{str(int(shoulder_distance))}\n{str(int(nose_to_midpoint))}")
 
         # analysis - point landmarks
-        image = cv2.circle(image, (l_shldr_x, l_shldr_y), 7, (255, 255, 0), -1)
-        image = cv2.circle(image, (r_shldr_x, r_shldr_y), 7, (255, 255, 0), -1)
-        image = cv2.circle(image, (nose_x, nose_y), 7, (255, 255, 0), -1)
-        image = cv2.circle(image, (shoulder_midpoint), 7, (255, 255, 0), -1)
+        image = cv2.circle(image, (l_shldr_x, l_shldr_y), 7, (0, 255, 255), -1)
+        image = cv2.circle(image, (r_shldr_x, r_shldr_y), 7, (0, 255, 255), -1)
+        image = cv2.circle(image, (nose_x, nose_y), 7, (0, 255, 255), -1)
+        image = cv2.circle(image, (shoulder_midpoint), 7, (0, 255, 255), -1)
         
         # analysis - join landmarks
         image = cv2.line(image, (l_shldr_x, l_shldr_y), (r_shldr_x, r_shldr_y), (0, 255, 0), 4)
@@ -122,14 +124,10 @@ def benchmark_photo(image):
         image = cv2.line(image, (r_shldr_x, r_shldr_y), (nose_x, nose_y), (0, 255, 0), 4)
 
         # to add later: angles, figures
-        
-        
-        # return analysed_picture (picture with shoulder, head points)
 
-        # cv2.imshow("Analysed image", image)
         image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
-        
-        # This function will send to UI:
+
+        # This function will send analysed picture (picture with shoulder, head points) to UI:
         return image
 
     except AttributeError as ae:
@@ -154,6 +152,11 @@ def main():
     height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
     frame_size = (width, height)
 
+    total_timer = time.time()
+    slouch_timer = 0.0
+    is_tracking = False
+    total_slouch = 0
+
     while cap.isOpened():
         # Capture frames.
         success, image = cap.read()
@@ -167,7 +170,7 @@ def main():
 
         # Convert the BGR image to RGB.
         # image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-        image = cv2.resize(image, None, fx=0.5, fy=0.5, interpolation=cv2.INTER_AREA)
+        # image = cv2.resize(image, None, fx=0.5, fy=0.5, interpolation=cv2.INTER_AREA)
 
         ###
         # frame = cv2.resize(frame, None, fx=0.5, fy=0.5, interpolation=cv2.INTER_AREA)
@@ -216,43 +219,57 @@ def main():
             print("X NOSE", nose_x)
             print("Y NOSE", nose_y)
 
+            # # Calculate distance between left shoulder and right shoulder points.
+            # shoulder_distance = findDistance(l_shldr_x, l_shldr_y, r_shldr_x, r_shldr_y)
+            # shoulder_midpoint = findMidpoint(l_shldr_x, l_shldr_y, r_shldr_x, r_shldr_y)
+
+            # read benchmark file (for user's posture benchmarks)     
+            with open('.benchmark') as b:
+    
+                benchmark = b.readlines()
+                shoulder2shoulder = int(benchmark[0])
+                chest2nose = int(benchmark[1])
+             
+            # read settings file to understand posture flexibility (seemlessness when user adjusts settings during recording)
+            with open('.settings') as s:
+                user_settings = s.readlines()
+                s2s_slouch_perc = int(user_settings[0])
+                n2c_slouch_perc = int(user_settings[1]) # clearer definition
+                ht_perc = int(user_settings[2]) # change to percentage
+                max_slouch_time = int(user_settings[3])
+
+            # obtain current posture status of posture and determine if bad posture (using a boolean array)
+
             shoulder_midpoint = findMidpoint(l_shldr_x, l_shldr_y, r_shldr_x, r_shldr_y)
 
-            # Calculate distance between left shoulder and right shoulder points.
-            shoulder_distance = findDistance(l_shldr_x, l_shldr_y, r_shldr_x, r_shldr_y)
-            # Assist to align the camera to point at the side view of the person.
-            # shoulder_distance threshold 30 is based on results obtained from analysis over 100 samples.
-            # if shoulder_distance < 100:
-            #     # we dont need to put texts, we just need to record this information for future decisions.
-            #     pass
-            # else:
-            #     pass
+            print("HWHHWH")
 
-            # Determine whether good posture or bad posture.
-            # The threshold angles have been set based on intuition.
-            # bad_frames = 0
-            # good_frames = 0
-            # if x:
-            #     bad_frames = 0
-            #     good_frames += 1
-            #
-            # else:
-            #     good_frames = 0
-            #     bad_frames += 1
+            s2s_slouch = check_shoulder2shoulder(l_shldr_x, l_shldr_y, r_shldr_x, r_shldr_y, shoulder2shoulder, s2s_slouch_perc)
+            print("WBWBWBWWN")
+            n2c_slouch = check_head2neckbase(shoulder_midpoint[0], shoulder_midpoint[1], nose_x, nose_y, chest2nose, n2c_slouch_perc)
+            ht_verify = check_headtilt(l_shldr_x, l_shldr_y, r_shldr_x, r_shldr_y, nose_x, nose_y, ht_perc)
 
-            # Calculate the time of remaining in a particular posture.
-            # good_time = (1 / fps) * good_frames
-            # bad_time =  (1 / fps) * bad_frames
-            #
-            # # Pose time.
-            # if good_time > 0:
-            #     time_string_good = 'Good Posture Time : ' + str(round(good_time, 1)) + 's'
-            # else:
-            #     time_string_bad = 'Bad Posture Time : ' + str(round(bad_time, 1)) + 's'
+            bad_posture_verification = [s2s_slouch, n2c_slouch, ht_verify] # if any of these are true, user is in a bad posture
+            # double check the maths for this ^
 
-            # If you stay in bad posture for more than 15s send an alert.
-            # if bad_time > 15:
-            #     sendWarning()
+            print("TIMEER DEBUGGER")
+
+            if s2s_slouch or n2c_slouch or ht_verify:
+                is_tracking = True
+                slouch_timer = time.time()
+            
+            if is_tracking == False and slouch_timer > 0:
+                total_slouch += time.time() - slouch_timer
+
+            print("SLOUCH TIME", total_slouch)
+                    
+            # shoulder_distance = findDistance(l_shldr_x, l_shldr_y, r_shldr_x, r_shldr_y)
+            # shoulder_midpoint = findMidpoint(l_shldr_x, l_shldr_y, r_shldr_x, r_shldr_y)
+            # nose_to_chest = findDistance(shoulder_midpoint[0], shoulder_midpoint[1], nose_x, nose_y)
+
+
+            # measure time spent in bad posture, then alert according to settings
+
         except AttributeError as ae:
             pass
 
