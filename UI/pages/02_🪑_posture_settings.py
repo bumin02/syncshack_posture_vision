@@ -9,5 +9,3 @@ st.slider("What is minimum amount of head tilt should be considered slouching: "
 
 st.subheader("Technical settings")
 tracking_interval = st.slider("How many times per minute do you want the program to scan your posture: ", 1, 60, 12)
-
-st.sidebar.title("🪑 Posture settings")

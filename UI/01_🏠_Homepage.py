@@ -7,4 +7,3 @@ st.markdown(
 
 ''')
 
-st.sidebar.title("🏠 Homepage")
