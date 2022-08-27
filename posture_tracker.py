@@ -25,6 +25,14 @@ def findMidpoint(a_x, a_y, b_x, b_y):
 def findDistance(a_x, a_y, b_x, b_y):
     pass
 
+
+def benchmark_photo(picture):
+    # analysis
+    # return analysed_picture (picture with shoulder, head points)
+    # also consider sending figures such as lengths, angles
+    pass
+
+
 def main():
     # take webcam input
     cap = cv2.VideoCapture(0)
@@ -47,7 +55,17 @@ def main():
         h, w = image.shape[:2]
 
         # Convert the BGR image to RGB.
-        image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+        # image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+        image = cv2.resize(image, None, fx=0.5, fy=0.5, interpolation=cv2.INTER_AREA)
+
+        ###
+        # frame = cv2.resize(frame, None, fx=0.5, fy=0.5, interpolation=cv2.INTER_AREA)
+        cv2.imshow('Posture Tracker', image)
+
+        c = cv2.waitKey(1)
+        if c == 27:
+            break
+        ###
 
         # Process the image.
         keypoints = pose.process(image)
@@ -83,6 +101,9 @@ def main():
             print("R SHOULDER", r_shldr_x, r_shldr_y)
             print("L EAR", l_ear_x, l_ear_y)
             print("L EAR", l_ear_x, l_ear_y)
+
+            print("X NOSE", nose_x)
+            print("Y NOSE", nose_y)
 
             shoulder_midpoint = findMidpoint(l_shldr_x, l_shldr_y, r_shldr_x, r_shldr_y)
 
