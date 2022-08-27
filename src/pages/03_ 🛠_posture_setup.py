@@ -16,3 +16,6 @@ if img_file_buffer:
     cv2_img = benchmark_photo(cv2_img)
 <<<<<<< HEAD
     st.image(cv2_img)
+=======
+
+>>>>>>> main
