@@ -26,7 +26,7 @@ ht = st.slider("What is minimum amount of head tilt should be considered slouchi
 st.subheader("Technical settings")
 tracking_interval = st.slider("How many seconds after you slouch should we alert you: ", 1, 120, 12)
 
-
-st.button("Apply!", on_click=saveChange)
-st.button("Reset!", on_click=reset)
+b1, b2, _ = st.columns([1,1,8])
+b1.button("Apply!", on_click=saveChange)
+b2.button("Reset!", on_click=reset)
     

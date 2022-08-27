@@ -15,6 +15,3 @@ if img_file_buffer:
     cv2_img = cv2.imdecode(np.frombuffer(bytes_data, np.uint8), cv2.IMREAD_COLOR)
     cv2_img = benchmark_photo(cv2_img)
     st.image(cv2_img)
-
-    with open("./.benchmark", "r") as f:
-        f.write("something")
