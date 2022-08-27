@@ -16,5 +16,3 @@ if img_file_buffer:
     cv2_img = benchmark_photo(cv2_img)
     st.image(cv2_img)
 
-    with open("./.benchmark", "r") as f:
-        f.write("something")
