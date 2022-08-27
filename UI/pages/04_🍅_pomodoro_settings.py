@@ -12,9 +12,3 @@ st.text(f"You will work for {work_interval} minutes for each pomodoro cycle")
 rest_interval = st.slider("How long would you like to rest: ",
                         5,60,5)
 st.text(f"You will rest for {rest_interval} minutes for each pomodoro cycle")
-
-# Sidebar
-st.sidebar.title("🍅 Pomodro settings!")
-
-
-    
