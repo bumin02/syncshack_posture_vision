@@ -1,11 +1,32 @@
 import streamlit as st
+import csv
+import os
+
+def saveChange():
+    global s2s, h2n, ht
+    with open("./.settings", "w") as f:
+        f.write(f"{s2s}\n{h2n}\n{ht}")
+
+def reset():
+    os.system("cp ./.basesettings ./.settings")
+
+with open("./.settings", "r") as f:
+    settings = f.readlines()
+    s2s =  int(settings[0])
+    h2n = int(settings[1])
+    ht = int(settings[2])
 
 st.title("Posture settings")
 
 st.subheader("Posture detections settings")
-st.slider("How much percentage change in shoulder to shoulder distance should be consider slouching: ", 0,100,5)
-st.slider("How much percentage change in distance from head to neck base should be consider slouching: ", 0, 100 , 25)
-st.slider("What is minimum amount of head tilt should be considered slouching: ", 0, 90,30)
+s2s = st.slider("How much percentage change in shoulder to shoulder distance should be consider slouching: ", 0,100,s2s)
+h2n = st.slider("How much percentage change in distance from head to neck base should be consider slouching: ", 0, 100 , h2n)
+ht = st.slider("What is minimum amount of head tilt should be considered slouching: ", 0, 90,ht)
 
 st.subheader("Technical settings")
-tracking_interval = st.slider("How many times per minute do you want the program to scan your posture: ", 1, 60, 12)
+tracking_interval = st.slider("How many seconds after you slouch should we alert you: ", 1, 120, 12)
+
+
+st.button("Apply!", on_click=saveChange)
+st.button("Reset!", on_click=reset)
+    
