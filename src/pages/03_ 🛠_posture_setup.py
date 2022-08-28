@@ -14,5 +14,6 @@ if img_file_buffer:
     bytes_data = img_file_buffer.getvalue()
     cv2_img = cv2.imdecode(np.frombuffer(bytes_data, np.uint8), cv2.IMREAD_COLOR)
     cv2_img = benchmark_photo(cv2_img)
+    st.write(cv2_img.shape)
     st.image(cv2_img)
 
